@@ -1,6 +1,3 @@
-Here is the definitive Technical Requirements Document for the Next.js frontend. It is designed to perfectly consume the exact API contracts and WebSocket events we established in the backend TRD.
-
----
 
 # **VedaAI Assessment Creator**
 
@@ -234,4 +231,13 @@ The frontend requires minimal environment configuration, relying primarily on th
 # .env.local
 NEXT_PUBLIC_API_URL=http://localhost:4000
 
+```
+
+### Docker
+
+The frontend includes a `Dockerfile` for building a production image. The repository also includes a top-level `docker-compose.yml` which can build and orchestrate both frontend and backend services together for local development. Example usage:
+
+```bash
+# From repository root
+docker compose up --build frontend
 ```

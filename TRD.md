@@ -61,6 +61,7 @@ A teacher submits an assignment creation form. The backend accepts the request, 
 | File Storage | Cloudinary | 2.x | PDF + file upload CDN |
 | PDF Parsing | pdf-parse | 1.x | Extract text from uploaded PDFs |
 | Process Manager | ts-node + nodemon | — | Dev only, hot-reload |
+| Containerization | Docker / docker-compose | — | Dockerfile(s) and `docker-compose.yml` available for local orchestration |
 
 ### 1.4 Non-Goals (Backend Scope)
 
@@ -1356,6 +1357,23 @@ npm run build
 npm run start
 npm run start:worker
 ```
+
+### Docker / Compose
+
+The repository includes Dockerfiles for the backend and frontend and a `docker-compose.yml` for local orchestration of the services (API server, worker, Redis, MongoDB, etc.). To bring up the full stack locally using Docker Compose:
+
+```bash
+# Build and start all services in detached mode
+docker compose up --build -d
+
+# View logs
+docker compose logs -f
+
+# Stop and remove containers
+docker compose down
+```
+
+Note: The backend `DockerFIle` (backend Dockerfile) is configured for a two-stage build; the `docker-compose.yml` overrides the default command for the worker and starts both the API and worker containers when configured.
 
 ---
 

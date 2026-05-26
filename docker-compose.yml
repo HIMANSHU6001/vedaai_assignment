@@ -1,0 +1,99 @@
+version: '3.8'
+
+services:
+  # ==========================================
+  # 1. API Gateway (Express)
+  # ==========================================
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: vedaai-api
+    ports:
+      - "4000:4000"
+    environment:
+      - PORT=4000
+      - NODE_ENV=production
+      # Connecting to a remote Atlas cluster or local mongo container
+      - MONGODB_URI=${MONGODB_URI}
+      # Connecting to the local Redis service defined below
+      - REDIS_URL=redis://redis:6379
+      # External API Keys (passed from your droplet's .env file)
+      - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY}
+      - DEEPSEEK_BASE_URL=${DEEPSEEK_BASE_URL}
+      - DEEPSEEK_MODEL=${DEEPSEEK_MODEL:-deepseek-chat}
+      - CLOUDINARY_CLOUD_NAME=${CLOUDINARY_CLOUD_NAME}
+      - CLOUDINARY_API_KEY=${CLOUDINARY_API_KEY}
+      - CLOUDINARY_API_SECRET=${CLOUDINARY_API_SECRET}
+    depends_on:
+      - redis
+    restart: unless-stopped
+    networks:
+      - vedaai-network
+
+  # ==========================================
+  # 2. Background Worker (BullMQ + LangChain)
+  # ==========================================
+  worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: vedaai-worker
+    # Overriding the default start command to run the worker process instead
+    command: ["node", "dist/worker/worker.js"]
+    environment:
+      - NODE_ENV=production
+      - MONGODB_URI=${MONGODB_URI}
+      - REDIS_URL=redis://redis:6379
+      - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY}
+      - DEEPSEEK_BASE_URL=${DEEPSEEK_BASE_URL}
+      - DEEPSEEK_MODEL=${DEEPSEEK_MODEL:-deepseek-chat}
+    depends_on:
+      - api
+      - redis
+    restart: unless-stopped
+    networks:
+      - vedaai-network
+
+  # ==========================================
+  # 3. Frontend (Next.js)
+  # ==========================================
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: vedaai-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      # For client-side fetching in the browser, this must point to the public IP or localhost
+      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-http://localhost:4000}
+    depends_on:
+      - api
+    restart: unless-stopped
+    networks:
+      - vedaai-network
+
+  # ==========================================
+  # 4. Redis Cache & Queue
+  # ==========================================
+  redis:
+    image: redis:7-alpine
+    container_name: vedaai-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+    networks:
+      - vedaai-network
+
+# ==========================================
+# Volumes & Networks
+# ==========================================
+volumes:
+  redis_data:
+
+networks:
+  vedaai-network:
+    driver: bridge
