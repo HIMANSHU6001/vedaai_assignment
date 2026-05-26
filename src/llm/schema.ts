@@ -10,6 +10,7 @@ export const QuestionSchema = z.object({
   difficulty: DifficultySchema,
   marks: z.number().int().positive().max(20),
   options: z.array(z.string().min(1)).length(4).optional(),
+  answer: z.string().min(5),
 });
 
 export const SectionSchema = z.object({

@@ -142,8 +142,8 @@ const styles = StyleSheet.create({
   /* ─── End of Paper ─── */
   endOfPaper: {
     fontSize: 10,
-    fontFamily: "Helvetica-BoldOblique",
-    color: "#cc0000",
+    fontFamily: "Helvetica-Bold",
+    color: "#333333",
     marginTop: 10,
     marginBottom: 30,
   },
@@ -152,7 +152,6 @@ const styles = StyleSheet.create({
   answerKeyTitle: {
     fontSize: 13,
     fontFamily: "Helvetica-Bold",
-    textDecoration: "underline",
     marginBottom: 12,
     marginTop: 20,
   },
@@ -288,12 +287,12 @@ export default function ExamPDF({ examData }: ExamPDFProps) {
 
         {/* ─── Answer Key ─── */}
         {data.sections.some(s => s.questions.some(q => q.answer)) && (
-          <View wrap={false}>
+          <View>
             <Text style={styles.answerKeyTitle}>Answer Key:</Text>
             {data.sections.map((section) =>
               section.questions.map((q, qIndex) =>
                 q.answer ? (
-                  <View key={`ans-${qIndex}`} style={styles.answerContainer} wrap={false}>
+                  <View key={`ans-${q.questionNumber || qIndex}`} style={styles.answerContainer} wrap={false}>
                     <Text style={styles.answerText}>
                       <Text style={styles.answerNumber}>{q.questionNumber}. </Text>
                       <Text>{q.answer}</Text>

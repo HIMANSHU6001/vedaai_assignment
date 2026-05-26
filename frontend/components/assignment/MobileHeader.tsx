@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { Bell, Menu, X, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
 import { useJobStore } from "@/store/useJobStore";
+import { useAssignmentStore } from "@/store/assignmentStore";
 import { useRouter } from "next/navigation";
 
 interface MobileHeaderProps {
@@ -13,6 +14,7 @@ export default function MobileHeader({
   onMenuToggle
 }: MobileHeaderProps) {
   const router = useRouter();
+  const { setViewState, setCurrentAssignmentId } = useAssignmentStore();
   const [openNotifications, setOpenNotifications] = useState(false);
   const { activeJobs, removeJob } = useJobStore();
 
@@ -109,7 +111,8 @@ export default function MobileHeader({
                           {job.status === "done" && (
                             <button
                               onClick={() => {
-                                router.push(`/assignments/${job.assignmentId}`);
+                                setCurrentAssignmentId(job.assignmentId);
+                                setViewState("preview");
                                 setOpenNotifications(false);
                               }}
                               className="px-2.5 py-1.5 bg-zinc-900 hover:bg-zinc-800 text-white rounded-full text-[10px] font-bold shadow-xs cursor-pointer transition-all active:scale-95"

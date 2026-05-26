@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   ArrowLeft,
   UploadCloud,
@@ -73,6 +73,67 @@ export default function CreateAssignment({
   // ─── Submission State ───
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+
+  // ─── Speech Recognition State ───
+  const [isListening, setIsListening] = useState(false);
+  const recognitionRef = useRef<any>(null);
+
+  useEffect(() => {
+    const SpeechRecognition =
+      (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+
+    if (SpeechRecognition) {
+      const rec = new SpeechRecognition();
+      rec.continuous = true;
+      rec.interimResults = false;
+      rec.lang = "en-US";
+
+      rec.onstart = () => {
+        setIsListening(true);
+      };
+
+      rec.onerror = (event: any) => {
+        console.error("Speech recognition error:", event.error);
+        if (event.error === "not-allowed") {
+          toast.error("Microphone permission denied.");
+        } else {
+          toast.error(`Voice input error: ${event.error}`);
+        }
+        setIsListening(false);
+      };
+
+      rec.onend = () => {
+        setIsListening(false);
+      };
+
+      rec.onresult = (event: any) => {
+        const transcript = event.results[event.results.length - 1][0].transcript;
+        setAdditionalInfo((prev) => {
+          const trimmed = prev.trim();
+          return trimmed ? `${trimmed} ${transcript.trim()}` : transcript.trim();
+        });
+      };
+
+      recognitionRef.current = rec;
+    }
+  }, []);
+
+  const toggleListening = () => {
+    if (!recognitionRef.current) {
+      toast.error("Speech recognition is not supported in this browser.");
+      return;
+    }
+
+    if (isListening) {
+      recognitionRef.current.stop();
+    } else {
+      try {
+        recognitionRef.current.start();
+      } catch (err) {
+        console.error("Failed to start speech recognition:", err);
+      }
+    }
+  };
 
   // ─── Question Type CRUD ───
   const updateCount = (id: string, delta: number) => {
@@ -179,22 +240,30 @@ export default function CreateAssignment({
       await triggerGeneration(assignmentId);
 
       // Step 3: Add to global job store and show toast
-      const { addJob } = useJobStore.getState();
-      addJob({
-        assignmentId,
-        title: finalTitle,
-        status: "processing",
-      });
+      try {
+        const { addJob } = useJobStore.getState();
+        addJob({
+          assignmentId,
+          title: finalTitle,
+          status: "processing",
+        });
 
-      toast.info(`Generating "${finalTitle}"`, {
-        description: "We are building your assignment in the background. Feel free to use VedaAI.",
-        duration: 6000,
-      });
+        toast.info(`Generating "${finalTitle}"`, {
+          description: "We are building your assignment in the background. Feel free to navigate VedaAI.",
+          duration: 6000,
+        });
+      } catch (err) {
+        console.error("[CreateAssignment] Failed to update job store/toast:", err);
+      }
 
-      // Refresh the list of assignments in the store so it shows up in list view immediately
-      useAssignmentStore.getState().fetchAssignments();
+      // Refresh the list of assignments in the store so it is cached
+      try {
+        useAssignmentStore.getState().fetchAssignments();
+      } catch (err) {
+        console.error("[CreateAssignment] Failed to refresh assignments cache:", err);
+      }
 
-      // Step 4: Navigate back to the list view immediately
+      // Step 4: Navigate directly to the dashboard list view immediately
       onBack?.();
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Something went wrong";
@@ -556,12 +625,22 @@ export default function CreateAssignment({
             />
             <button
               type="button"
-              className="absolute right-4 bottom-4 w-10 h-10 hover:bg-zinc-150 bg-white/20 rounded-full flex items-center justify-center cursor-pointer transition-colors active:scale-95"
+              onClick={toggleListening}
+              className={cn(
+                "absolute right-4 bottom-4 w-10 h-10 rounded-full flex items-center justify-center cursor-pointer transition-all active:scale-95",
+                isListening
+                  ? "bg-red-500 hover:bg-red-600 text-white animate-pulse"
+                  : "bg-white/20 hover:bg-zinc-200/50 text-zinc-600 border border-zinc-200/20 shadow-xs"
+              )}
+              title={isListening ? "Listening... Click to stop" : "Use voice input"}
             >
               <img
                 src="/icons/mic.svg"
                 alt="Voice input"
-                className="w-4 h-4 select-none object-contain"
+                className={cn(
+                  "w-4 h-4 select-none object-contain",
+                  isListening && "brightness-0 invert"
+                )}
               />
             </button>
           </div>

@@ -4,6 +4,7 @@ export const SYSTEM_PROMPT = `You are an expert educational assessment designer.
 Your task is to generate a structured, professional question paper.
 
 Rules you MUST follow:
+- Generate a formal, academically appropriate and professional title for the question paper (e.g., "Class Test: Chemical Effects of Electric Current" or "Unit Assessment: React Hooks in Depth"). Do NOT just copy raw snake_case names or file names (like "ch_3_react" or "react_hooks_guide_Paper").
 - Generate exactly the number of questions specified
 - Total marks across all questions MUST equal the requested total exactly
 - Distribute questions across sections by question type (one section per type)
@@ -12,7 +13,7 @@ Rules you MUST follow:
 - Question text must be academically appropriate and unambiguous
 - Section labels must be sequential uppercase letters: A, B, C...
 - Do not add questions beyond the specified count
-- Do not include answers or answer keys`;
+- Include a detailed and academically appropriate model answer for each question in the 'answer' field of the question object (e.g., correct option letter + explanation for MCQs, complete solution for short answers). This will be used to automatically build the Answer Key section at the end of the paper.`;
 
 type DifficultyCounts = {
   easy: number;
@@ -57,7 +58,7 @@ export function buildPrompt(assignment: IAssignment): string {
 
   let prompt = `Generate a question paper with these exact specifications:
 
-Title: ${assignment.title}
+Suggested Topic/Source Name: ${assignment.title}
 Subject: ${assignment.subject}
 Total Questions: ${assignment.totalQuestions}
 Total Marks: ${assignment.totalMarks}

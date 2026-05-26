@@ -61,12 +61,23 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
         addJob({ assignmentId, title, status });
         updateJobStatus(assignmentId, status);
 
+        // Refresh the global assignment list store so the dashboard updates in real-time
+        try {
+          useAssignmentStore.getState().fetchAssignments();
+        } catch (err) {
+          console.error("[SocketProvider] Failed to refresh assignments store:", err);
+        }
+
         if (status === "done") {
           toast.success(`Assignment "${title}" ready!`, {
             description: "Your background generation job has completed successfully.",
             action: {
               label: "View",
-              onClick: () => router.push(`/assignments/${assignmentId}`),
+              onClick: () => {
+                const store = useAssignmentStore.getState();
+                store.setCurrentAssignmentId(assignmentId);
+                store.setViewState("preview");
+              },
             },
             duration: 10000,
           });

@@ -17,24 +17,44 @@ export default function Header({
   onBack
 }: HeaderProps) {
   const router = useRouter();
+  const { viewState, setViewState, setCurrentAssignmentId } = useAssignmentStore();
   const [openNotifications, setOpenNotifications] = useState(false);
   const { activeJobs, removeJob } = useJobStore();
 
   return (
     <header className="hidden lg:flex items-center justify-between px-6 py-3 backdrop-blur-sm shrink-0 bg-white border rounded-3xl my-4 mx-4 p-5 z-40">
-      {/* Left side: Back arrow + Grid icon + Title */}
+      {/* Left side: Dynamic Back arrow & branding / page status */}
       <div className="flex items-center gap-3">
-        <button
-          onClick={onBack}
-          className="p-2 hover:bg-zinc-100 active:scale-95 rounded-lg text-zinc-600 transition-all cursor-pointer"
-        >
-          <ArrowLeft className="w-5 h-5" />
-        </button>
-
-        <div className="flex items-center gap-2 text-zinc-300">
-          <LayoutGrid className="w-4 h-4 " size={15} strokeWidth={3} />
-          <span className="text-sm font-semibold text-zinc-400">{title}</span>
-        </div>
+        {viewState === "preview" ? (
+          <>
+            <button
+              onClick={onBack}
+              className="w-10 h-10 bg-white border border-zinc-250/65 rounded-full flex items-center justify-center text-zinc-700 hover:bg-zinc-50 active:scale-95 transition-all cursor-pointer shadow-xs"
+            >
+              <ArrowLeft className="w-5 h-5 text-zinc-800" />
+            </button>
+            <div className="text-sm font-semibold text-zinc-400 flex items-center gap-1.5 ml-1 select-none">
+              <svg width="19" height="18" viewBox="0 0 19 18" fill="none" className="w-4.5 h-4 select-none shrink-0" xmlns="http://www.w3.org/2000/svg">
+                <path fillRule="evenodd" clipRule="evenodd" d="M4.63783 8.63783L6.18377 4H7.13246L8.6784 8.63783L13.3162 10.1838V11.1325L8.6784 12.6784L7.13246 17.3162H6.18377L4.63783 12.6784L0 11.1325V10.1838L4.63783 8.63783Z" fill="currentColor" />
+                <path fillRule="evenodd" clipRule="evenodd" d="M13.3878 2.38783L14.1838 0H15.1325L15.9284 2.38783L18.3162 3.18377V4.13246L15.9284 4.9284L15.1325 7.31623H14.1838L13.3878 4.9284L11 4.13246V3.18377L13.3878 2.38783Z" fill="currentColor" />
+              </svg>
+              <span>Create New</span>
+            </div>
+          </>
+        ) : (
+          <>
+            <button
+              onClick={onBack}
+              className="p-2 hover:bg-zinc-100 active:scale-95 rounded-lg text-zinc-600 transition-all cursor-pointer"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </button>
+            <div className="flex items-center gap-2 text-zinc-300">
+              <LayoutGrid className="w-4 h-4 " size={15} strokeWidth={3} />
+              <span className="text-sm font-semibold text-zinc-400">{title}</span>
+            </div>
+          </>
+        )}
       </div>
 
       {/* Right side: Bell & User menu */}
@@ -63,7 +83,7 @@ export default function Header({
               {/* Notification panel */}
               <div className="absolute right-0 mt-3 w-80 bg-white border border-zinc-200/90 shadow-2xl rounded-[24px] p-4.5 z-50 animate-in fade-in slide-in-from-top-2 duration-150">
                 <div className="flex items-center justify-between border-b border-zinc-100 pb-2.5 mb-3">
-                  <h4 className="text-xs font-black text-zinc-950 uppercase tracking-wider">AI Generation Tasks</h4>
+                  <h4 className="text-xs font-black text-zinc-950 uppercase tracking-wider">Notifications</h4>
                   <span className="text-[10px] font-bold text-zinc-400">{activeJobs.length} items</span>
                 </div>
 
@@ -71,7 +91,7 @@ export default function Header({
                   {activeJobs.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-6 text-center">
                       <span className="text-2xl mb-1.5 select-none">🔔</span>
-                      <p className="text-xs font-bold text-zinc-800">No background tasks</p>
+                      <p className="text-xs font-bold text-zinc-800">No notifications</p>
                       <p className="text-[10px] text-zinc-400/80 mt-0.5 leading-relaxed">Your generated assignments will appear here</p>
                     </div>
                   ) : (
@@ -110,7 +130,8 @@ export default function Header({
                           {job.status === "done" && (
                             <button
                               onClick={() => {
-                                router.push(`/assignments/${job.assignmentId}`);
+                                setCurrentAssignmentId(job.assignmentId);
+                                setViewState("preview");
                                 setOpenNotifications(false);
                               }}
                               className="px-2.5 py-1.5 bg-zinc-900 hover:bg-zinc-800 text-white rounded-full text-[10px] font-bold shadow-xs cursor-pointer transition-all active:scale-95"
