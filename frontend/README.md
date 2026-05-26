@@ -1,36 +1,73 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# VedaAI — AI Assessment Creator (Frontend Client)
 
-## Getting Started
+This is the Next.js frontend client for VedaAI, an academic assessment creator powered by AI. It provides an intuitive, high-performance web interface styled with modern typography, harmonic color palettes, glassmorphism, and responsive CSS layouts.
 
-First, run the development server:
+For comprehensive technical specifications, frontend architecture, and state management details, see the **[Frontend TRD.md](file:///c:/Users/Himanshu/Desktop/vedaai_assignment/frontend/TRD.md)**.
 
+---
+
+## ⚡ Quickstart Guide
+
+Get the frontend Next.js development server running locally in just a few steps.
+
+### 1. Prerequisites
+Ensure you have the following installed:
+- **Node.js** (v20+ recommended)
+- **npm** (v10+)
+
+### 2. Environment Setup
+From the `/frontend` directory, copy the environment variables example file:
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+cp .env.example .env.local
+```
+Ensure `NEXT_PUBLIC_API_URL` points to the active VedaAI backend API Gateway (default: `http://localhost:4000`).
+
+### 3. Install Dependencies
+```bash
+npm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 4. Run Development Server
+Start the local Next.js client dev server:
+```bash
+npm run dev
+```
+Open [http://localhost:3000](http://localhost:3000) in your browser to view the application.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+---
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 🏗️ Core Features & Views
 
-## Learn More
+The client leverages a dual-tab dashboard workflow and real-time state synchronization:
+1. **Inbox / Library Dashboard**: List existing assignments, review creation statuses, and browse previously generated papers.
+2. **Assessment Creation Form**: A robust multipart form (supporting file drag-and-drop, question limits, and precise marks/difficulty distributions).
+3. **Real-time Live Generation Overlay**: WebSocket listener updates Zustand store and shows active generation progress while backend processes the job.
+4. **Physical Exam Preview & PDF Export**: A printable academic exam paper rendering with action buttons to download as a structured PDF.
 
-To learn more about Next.js, take a look at the following resources:
+---
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 🛠️ Tech Stack & Scripts
+- **Framework**: Next.js 16 (App Router)
+- **Styling**: Tailwind CSS + shadcn/ui
+- **State Management**: Zustand
+- **Real-Time Integration**: Socket.io-client
+- **PDF Export**: `@react-pdf/renderer`
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### NPM Scripts
+- `npm run dev`: Launches Next.js dev server on http://localhost:3000 (accessible network-wide).
+- `npm run build`: Builds the production bundle of the application.
+- `npm run start`: Starts the production Next.js server.
+- `npm run lint`: Runs ESLint to check for standard rules and code quality.
 
-## Deploy on Vercel
+---
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## 📄 Technical Reference Document (TRD)
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Detailed implementations and technical breakdowns are available in the **[frontend/TRD.md](file:///c:/Users/Himanshu/Desktop/vedaai_assignment/frontend/TRD.md)**:
+- [Overview & Frameworks](file:///c:/Users/Himanshu/Desktop/vedaai_assignment/frontend/TRD.md#1-overview)
+- [Project Structure Diagram](file:///c:/Users/Himanshu/Desktop/vedaai_assignment/frontend/TRD.md#2-project-structure)
+- [Zustand Global State Store Contract](file:///c:/Users/Himanshu/Desktop/vedaai_assignment/frontend/TRD.md#3-state-management-zustand)
+- [WebSocket / Socket.io Room Lifecycle Hook](file:///c:/Users/Himanshu/Desktop/vedaai_assignment/frontend/TRD.md#4-real-time-integration-websocket)
+- [Multi-part Form & Result Fetching API Flows](file:///c:/Users/Himanshu/Desktop/vedaai_assignment/frontend/TRD.md#5-api-data-flow--submissions)
+- [Component Structure (Form, Layout, Result Screen)](file:///c:/Users/Himanshu/Desktop/vedaai_assignment/frontend/TRD.md#6-ui-components-layout)
+- [Environment Configurations & Docker Compose Settings](file:///c:/Users/Himanshu/Desktop/vedaai_assignment/frontend/TRD.md#7-environment-configuration)
