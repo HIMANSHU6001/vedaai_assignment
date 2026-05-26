@@ -149,7 +149,7 @@ npx ts-node src/worker/worker.ts
 | `CLOUDINARY_API_KEY` | string | **Yes** | Cloudinary API key |
 | `CLOUDINARY_API_SECRET` | string | **Yes** | Cloudinary API secret |
 | `DEEPSEEK_API_KEY` | string | **Yes** | DigitalOcean GenAI API key for DeepSeek V3 |
-| `DEEPSEEK_BASE_URL` | string | **Yes** | DigitalOcean endpoint: `https://<agent>.agents.hosted-inference.digitaloceanspaces.com/v1` |
+| `DO_BASE_URL` | string | **Yes** | DigitalOcean endpoint: `https://<agent>.agents.hosted-inference.digitaloceanspaces.com/v1` |
 | `DEEPSEEK_MODEL` | string | No | Model identifier. Default: `deepseek-chat` |
 | `NODE_ENV` | string | No | `development` \| `production`. Default: `development` |
 | `CORS_ORIGIN` | string | No | Frontend origin for CORS. Default: `http://localhost:3000` |
@@ -166,7 +166,7 @@ CLOUDINARY_API_KEY=your_api_key
 CLOUDINARY_API_SECRET=your_api_secret
 
 DEEPSEEK_API_KEY=your_digitalocean_key
-DEEPSEEK_BASE_URL=https://<agent>.agents.hosted-inference.digitaloceanspaces.com/v1
+DO_BASE_URL=https://<agent>.agents.hosted-inference.digitaloceanspaces.com/v1
 DEEPSEEK_MODEL=deepseek-chat
 
 NODE_ENV=development
@@ -753,7 +753,7 @@ export function createModel() {
     modelName: process.env.DEEPSEEK_MODEL ?? 'deepseek-chat',
     openAIApiKey: process.env.DEEPSEEK_API_KEY!,
     configuration: {
-      baseURL: process.env.DEEPSEEK_BASE_URL!,
+      baseURL: process.env.DO_BASE_URL!,
     },
     temperature: 0.7,
     maxTokens: 4096,

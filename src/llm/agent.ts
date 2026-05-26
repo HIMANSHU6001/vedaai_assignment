@@ -5,9 +5,9 @@ import { SYSTEM_PROMPT } from './prompt';
 export function createModel() {
   return new ChatOpenAI({
     modelName: process.env.DEEPSEEK_MODEL ?? 'deepseek-chat',
-    openAIApiKey: process.env.DEEPSEEK_API_KEY!,
+    apiKey: process.env.DEEPSEEK_API_KEY!,
     configuration: {
-      baseURL: process.env.DEEPSEEK_BASE_URL!,
+      baseURL: process.env.DO_BASE_URL!,
     },
     temperature: 0.7,
     maxTokens: 4096,

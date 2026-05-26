@@ -1,11 +1,12 @@
-import pdfParse from 'pdf-parse';
+import { PDFParse } from 'pdf-parse';
 
 const MAX_EXTRACTED_LENGTH = 3000;
 
 export async function extractTextFromBuffer(buffer: Buffer, mimetype: string): Promise<string> {
   if (mimetype === 'application/pdf') {
-    const parsePdf = pdfParse as unknown as (input: Buffer) => Promise<{ text: string }>;
-    const parsed = await parsePdf(buffer);
+    const parser = new PDFParse({ data: buffer });
+    const parsed = await parser.getText();
+    await parser.destroy();
     return parsed.text.slice(0, MAX_EXTRACTED_LENGTH).trim();
   }
 
@@ -15,3 +16,4 @@ export async function extractTextFromBuffer(buffer: Buffer, mimetype: string): P
 
   return '';
 }
+

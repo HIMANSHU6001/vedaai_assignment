@@ -1,18 +1,19 @@
 # frontend/Dockerfile
-FROM node:20-alpine AS builder
+FROM node:22-alpine
+
 WORKDIR /app
+
+# Install dependencies first (caching this layer)
 COPY package*.json ./
 RUN npm install
+
+# Copy the rest of the application code
 COPY . .
-RUN npm run build
 
-FROM node:20-alpine AS runner
-WORKDIR /app
-ENV NODE_ENV production
-
-COPY --from=builder /app/public ./public
-COPY --from=builder /app/.next/standalone ./
-COPY --from=builder /app/.next/static ./.next/static
+# Set environment variable for development
+ENV NODE_ENV=development
 
 EXPOSE 3000
-CMD ["node", "server.js"]
+
+# Start the Next.js development server
+CMD ["npm", "run", "dev"]

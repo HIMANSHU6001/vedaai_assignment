@@ -29,9 +29,9 @@ frontend/.swc/
 # =========================
 # Express & TypeScript (Backend)
 # =========================
-backend/dist/
-backend/build/
-backend/tsconfigs.tsbuildinfo
+dist/
+build/
+tsconfigs.tsbuildinfo
 
 # =========================
 # OS / System Files

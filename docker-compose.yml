@@ -1,26 +1,24 @@
-version: '3.8'
-
 services:
   # ==========================================
   # 1. API Gateway (Express)
   # ==========================================
   api:
     build:
-      context: ./backend
+      context: .
       dockerfile: Dockerfile
     container_name: vedaai-api
     ports:
       - "4000:4000"
     environment:
       - PORT=4000
-      - NODE_ENV=production
+      - NODE_ENV=${NODE_ENV:-development}
       # Connecting to a remote Atlas cluster or local mongo container
       - MONGODB_URI=${MONGODB_URI}
       # Connecting to the local Redis service defined below
       - REDIS_URL=redis://redis:6379
       # External API Keys (passed from your droplet's .env file)
       - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY}
-      - DEEPSEEK_BASE_URL=${DEEPSEEK_BASE_URL}
+      - DO_BASE_URL=${DO_BASE_URL}
       - DEEPSEEK_MODEL=${DEEPSEEK_MODEL:-deepseek-chat}
       - CLOUDINARY_CLOUD_NAME=${CLOUDINARY_CLOUD_NAME}
       - CLOUDINARY_API_KEY=${CLOUDINARY_API_KEY}
@@ -36,17 +34,17 @@ services:
   # ==========================================
   worker:
     build:
-      context: ./backend
+      context: .
       dockerfile: Dockerfile
     container_name: vedaai-worker
     # Overriding the default start command to run the worker process instead
-    command: ["node", "dist/worker/worker.js"]
+    command: [ "node", "dist/worker/worker.js" ]
     environment:
-      - NODE_ENV=production
+      - NODE_ENV=${NODE_ENV:-development}
       - MONGODB_URI=${MONGODB_URI}
       - REDIS_URL=redis://redis:6379
       - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY}
-      - DEEPSEEK_BASE_URL=${DEEPSEEK_BASE_URL}
+      - DO_BASE_URL=${DO_BASE_URL}
       - DEEPSEEK_MODEL=${DEEPSEEK_MODEL:-deepseek-chat}
     depends_on:
       - api

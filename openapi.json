@@ -1,0 +1,741 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "VedaAI Assessment API",
+    "description": "API for VedaAI - AI-driven question paper generation using LangChain and DeepSeek.",
+    "version": "1.1.0"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:4000",
+      "description": "Local Development / Docker Environment"
+    }
+  ],
+  "paths": {
+    "/health": {
+      "get": {
+        "summary": "Health Check",
+        "description": "Returns the status of the API and its database/cache dependencies.",
+        "responses": {
+          "200": {
+            "description": "System is healthy",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthCheckResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "One or more dependent services are unhealthy",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthCheckResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/assignments": {
+      "post": {
+        "summary": "Create a new assignment",
+        "description": "Accepts form data including an optional PDF syllabus upload. Saves the assignment in a 'pending' state.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAssignmentRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Assignment created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssignmentCreatedResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error (Zod)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "summary": "List recent assignments",
+        "description": "Retrieves the 50 most recent assignments, sorted by creation date descending.",
+        "responses": {
+          "200": {
+            "description": "List of assignments retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListAssignmentsResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/assignments/{id}/generate": {
+      "post": {
+        "summary": "Trigger AI Generation",
+        "description": "Pushes the assignment to the BullMQ worker queue for background processing.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "MongoDB ObjectId of the assignment"
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Job accepted and added to queue",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobTriggeredResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid assignment ID or missing parameter",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Assignment not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/assignments/{id}/result": {
+      "get": {
+        "summary": "Get generated question paper",
+        "description": "Returns the strictly formatted JSON output of the generated assessment. Checks Redis cache first.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "MongoDB ObjectId of the assignment"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The generated question paper",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetResultResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid assignment ID format or missing ID",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Paper not found or generation not complete",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "CreateAssignmentRequest": {
+        "type": "object",
+        "required": [
+          "title",
+          "subject",
+          "dueDate",
+          "questionTypes",
+          "totalQuestions",
+          "totalMarks"
+        ],
+        "properties": {
+          "title": {
+            "type": "string",
+            "maxLength": 200,
+            "example": "Advanced React Patterns"
+          },
+          "subject": {
+            "type": "string",
+            "maxLength": 100,
+            "example": "Software Engineering"
+          },
+          "dueDate": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-06-01T12:00:00.000Z"
+          },
+          "questionTypes": {
+            "type": "string",
+            "description": "Stringified JSON array of enums: ['mcq', 'short_answer', 'long_answer', 'true_false', 'fill_blank']",
+            "example": "[\"mcq\", \"short_answer\"]"
+          },
+          "totalQuestions": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100,
+            "example": 5
+          },
+          "totalMarks": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 500,
+            "example": 50
+          },
+          "difficultyDistribution": {
+            "type": "string",
+            "description": "Stringified JSON object mapping easy, medium, hard percentages summing to 100",
+            "example": "{\"easy\": 20, \"medium\": 50, \"hard\": 30}"
+          },
+          "additionalInstructions": {
+            "type": "string",
+            "maxLength": 2000,
+            "example": "Focus heavily on custom hooks."
+          },
+          "file": {
+            "type": "string",
+            "format": "binary",
+            "description": "Optional PDF syllabus upload (Max 10MB)"
+          }
+        }
+      },
+      "AssignmentCreatedResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": true
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "assignmentId": {
+                "type": "string",
+                "example": "65f1a3b8e4b0a1c2d3e4f5g6"
+              },
+              "status": {
+                "type": "string",
+                "enum": ["pending", "processing", "done", "failed"],
+                "example": "pending"
+              }
+            },
+            "required": [
+              "assignmentId",
+              "status"
+            ]
+          }
+        },
+        "required": [
+          "success",
+          "data"
+        ]
+      },
+      "ListAssignmentsResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": true
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Assignment"
+            }
+          }
+        },
+        "required": [
+          "success",
+          "data"
+        ]
+      },
+      "Assignment": {
+        "type": "object",
+        "properties": {
+          "_id": {
+            "type": "string",
+            "example": "65f1a3b8e4b0a1c2d3e4f5g6"
+          },
+          "title": {
+            "type": "string",
+            "maxLength": 200,
+            "example": "Advanced React Patterns"
+          },
+          "subject": {
+            "type": "string",
+            "maxLength": 100,
+            "example": "Software Engineering"
+          },
+          "dueDate": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-06-01T12:00:00.000Z"
+          },
+          "questionTypes": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": ["mcq", "short_answer", "long_answer", "true_false", "fill_blank"]
+            },
+            "example": [
+              "mcq",
+              "short_answer"
+            ]
+          },
+          "totalQuestions": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100,
+            "example": 5
+          },
+          "totalMarks": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 500,
+            "example": 50
+          },
+          "difficultyDistribution": {
+            "$ref": "#/components/schemas/DifficultyDistribution"
+          },
+          "additionalInstructions": {
+            "type": "string",
+            "maxLength": 2000,
+            "example": "Focus heavily on custom hooks."
+          },
+          "fileUrl": {
+            "type": "string",
+            "example": "https://res.cloudinary.com/..."
+          },
+          "filePublicId": {
+            "type": "string",
+            "example": "raw/upload/..."
+          },
+          "extractedText": {
+            "type": "string"
+          },
+          "jobId": {
+            "type": "string",
+            "nullable": true,
+            "example": "123"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["pending", "processing", "done", "failed"],
+            "example": "pending"
+          },
+          "errorMessage": {
+            "type": "string",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-05-26T12:00:00.000Z"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-05-26T12:05:00.000Z"
+          }
+        },
+        "required": [
+          "_id",
+          "title",
+          "subject",
+          "dueDate",
+          "questionTypes",
+          "totalQuestions",
+          "totalMarks",
+          "difficultyDistribution",
+          "status",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "DifficultyDistribution": {
+        "type": "object",
+        "properties": {
+          "easy": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100,
+            "example": 33
+          },
+          "medium": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100,
+            "example": 34
+          },
+          "hard": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100,
+            "example": 33
+          }
+        },
+        "required": [
+          "easy",
+          "medium",
+          "hard"
+        ]
+      },
+      "JobTriggeredResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": true
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "jobId": {
+                "type": "string",
+                "example": "12"
+              },
+              "assignmentId": {
+                "type": "string",
+                "example": "65f1a3b8e4b0a1c2d3e4f5g6"
+              },
+              "status": {
+                "type": "string",
+                "example": "processing"
+              }
+            },
+            "required": [
+              "jobId",
+              "assignmentId",
+              "status"
+            ]
+          }
+        },
+        "required": [
+          "success",
+          "data"
+        ]
+      },
+      "GetResultResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": true
+          },
+          "cached": {
+            "type": "boolean",
+            "example": false
+          },
+          "data": {
+            "$ref": "#/components/schemas/QuestionPaper"
+          }
+        },
+        "required": [
+          "success",
+          "cached",
+          "data"
+        ]
+      },
+      "QuestionPaper": {
+        "type": "object",
+        "properties": {
+          "_id": {
+            "type": "string",
+            "example": "65f1a3b8e4b0a1c2d3e4f5g7"
+          },
+          "assignmentId": {
+            "type": "string",
+            "example": "65f1a3b8e4b0a1c2d3e4f5g6"
+          },
+          "title": {
+            "type": "string",
+            "example": "Advanced React Patterns"
+          },
+          "subject": {
+            "type": "string",
+            "example": "Software Engineering"
+          },
+          "totalMarks": {
+            "type": "integer",
+            "example": 50
+          },
+          "totalQuestions": {
+            "type": "integer",
+            "example": 5
+          },
+          "sections": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Section"
+            }
+          },
+          "generatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "modelUsed": {
+            "type": "string",
+            "example": "deepseek-chat"
+          },
+          "promptTokens": {
+            "type": "integer",
+            "nullable": true,
+            "example": 1024
+          },
+          "completionTokens": {
+            "type": "integer",
+            "nullable": true,
+            "example": 2048
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "_id",
+          "assignmentId",
+          "title",
+          "subject",
+          "totalMarks",
+          "totalQuestions",
+          "sections",
+          "generatedAt",
+          "modelUsed",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "Section": {
+        "type": "object",
+        "properties": {
+          "sectionLabel": {
+            "type": "string",
+            "example": "A"
+          },
+          "title": {
+            "type": "string",
+            "example": "Multiple Choice Questions"
+          },
+          "instruction": {
+            "type": "string",
+            "example": "Attempt all questions. Each carries 2 marks."
+          },
+          "totalMarks": {
+            "type": "integer",
+            "example": 10
+          },
+          "questions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Question"
+            }
+          }
+        },
+        "required": [
+          "sectionLabel",
+          "title",
+          "instruction",
+          "totalMarks",
+          "questions"
+        ]
+      },
+      "Question": {
+        "type": "object",
+        "properties": {
+          "questionNumber": {
+            "type": "integer",
+            "example": 1
+          },
+          "text": {
+            "type": "string",
+            "example": "What is the primary benefit of React hooks?"
+          },
+          "type": {
+            "type": "string",
+            "example": "mcq"
+          },
+          "difficulty": {
+            "type": "string",
+            "enum": [
+              "easy",
+              "medium",
+              "hard"
+            ],
+            "example": "medium"
+          },
+          "marks": {
+            "type": "integer",
+            "example": 2
+          },
+          "options": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Only present if type is 'mcq'",
+            "example": [
+              "State reuse without class components",
+              "Faster performance",
+              "Automatic server-side rendering",
+              "Less CSS code"
+            ]
+          }
+        },
+        "required": [
+          "questionNumber",
+          "text",
+          "type",
+          "difficulty",
+          "marks"
+        ]
+      },
+      "ValidationErrorResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": false
+          },
+          "error": {
+            "type": "string",
+            "example": "Validation failed"
+          },
+          "details": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "path": {
+                  "type": "string",
+                  "example": "dueDate"
+                },
+                "message": {
+                  "type": "string",
+                  "example": "Due date must be in the future"
+                }
+              },
+              "required": [
+                "path",
+                "message"
+              ]
+            }
+          }
+        },
+        "required": [
+          "success",
+          "error",
+          "details"
+        ]
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": false
+          },
+          "error": {
+            "type": "string",
+            "example": "Assignment not found"
+          }
+        },
+        "required": [
+          "success",
+          "error"
+        ]
+      },
+      "HealthCheckResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": ["ok", "error"],
+            "example": "ok"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "services": {
+            "type": "object",
+            "properties": {
+              "mongodb": {
+                "type": "string",
+                "enum": ["connected", "disconnected"],
+                "example": "connected"
+              },
+              "redis": {
+                "type": "string",
+                "enum": ["connected", "disconnected"],
+                "example": "connected"
+              }
+            },
+            "required": ["mongodb", "redis"]
+          }
+        },
+        "required": ["status", "timestamp", "services"]
+      }
+    }
+  }
+}
