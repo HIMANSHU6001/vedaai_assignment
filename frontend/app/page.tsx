@@ -45,7 +45,6 @@ export default function Home() {
   };
 
   const handleBack = () => {
-    console.log("View state = ", viewState)
     if (viewState === "preview") {
       setViewState("list");
       setCurrentAssignmentId(null);

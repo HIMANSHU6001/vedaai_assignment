@@ -211,12 +211,10 @@ export default function ExamPDF({ examData }: ExamPDFProps) {
         <View style={styles.header}>
           <Text style={styles.schoolName}>{data.title}</Text>
           <Text style={styles.headerSubText}>Subject: {data.subject}</Text>
-          <Text style={styles.headerSubText}>Class: 5th</Text>
         </View>
 
         {/* ─── Time Allowed / Maximum Marks ─── */}
-        <View style={styles.timeMarksRow}>
-          <Text style={styles.timeBold}>Time Allowed: 45 minutes</Text>
+        <View style={[styles.timeMarksRow, { justifyContent: "flex-end" }]}>
           <Text style={styles.timeBold}>Maximum Marks: {data.totalMarks}</Text>
         </View>
 
@@ -236,8 +234,10 @@ export default function ExamPDF({ examData }: ExamPDFProps) {
             <View style={[styles.blankLine, { width: 120 }]} />
           </View>
           <View style={styles.blankRow}>
-            <Text style={styles.blankLabel}>Class: 5th Section: </Text>
-            <View style={[styles.blankLine, { width: 80 }]} />
+            <Text style={styles.blankLabel}>Class: </Text>
+            <View style={[styles.blankLine, { width: 60 }]} />
+            <Text style={[styles.blankLabel, { marginLeft: 8 }]}>Section: </Text>
+            <View style={[styles.blankLine, { width: 60 }]} />
           </View>
         </View>
 

@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import { Worker } from 'bullmq';
 import { workerRedis } from '../config/redis';
 import { connectDB } from '../config/db';
@@ -34,7 +35,12 @@ async function startWorker() {
 	});
 
 	console.log('[Worker] Listening for jobs on queue: question-generation');
+
+	process.on('SIGTERM', async () => {
+		console.log('[Worker] SIGTERM received, shutting down...');
+		await worker.close();
+		process.exit(0);
+	});
 }
 
 startWorker();
-

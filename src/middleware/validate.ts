@@ -33,7 +33,6 @@ export const CreateAssignmentSchema = z.object({
 export function validateBody(schema: z.ZodTypeAny) {
   return (req: Request, _res: Response, next: NextFunction) => {
     try {
-      console.log('[ValidateBody] Incoming req.body:', req.body);
       const parsed = schema.parse(req.body);
       req.body = parsed as any;
       return next();

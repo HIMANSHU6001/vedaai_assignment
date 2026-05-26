@@ -18,6 +18,13 @@ async function start() {
   httpServer.listen(PORT, () => {
     console.log(`[Server] Listening on port ${PORT}`);
   });
+
+  process.on('SIGTERM', () => {
+    console.log('[Server] SIGTERM received, shutting down...');
+    httpServer.close(() => {
+      process.exit(0);
+    });
+  });
 }
 
 start();

@@ -19,6 +19,9 @@ export async function createAssignment(req: Request, res: Response) {
       fileUrl = url;
       filePublicId = publicId;
     } catch (err: any) {
+      if (process.env.NODE_ENV === 'production') {
+        throw err;
+      }
       console.warn("[Cloudinary] Upload failed, using mock local fallback due to connection issues:", err.message);
       fileUrl = `/uploads/mock-${Date.now()}-${req.file.originalname}`;
       filePublicId = `mock-${Date.now()}`;
@@ -104,9 +107,24 @@ export async function getResult(req: Request, res: Response) {
   res.status(200).json({ success: true, cached: false, data: paper });
 }
 
-export async function listAssignments(_req: Request, res: Response) {
-  const items = await Assignment.find().sort({ createdAt: -1 }).limit(50);
-  res.status(200).json({ success: true, data: items });
+export async function listAssignments(req: Request, res: Response) {
+  const page = parseInt(req.query.page as string) || 1;
+  const limit = parseInt(req.query.limit as string) || 50;
+  const skip = (page - 1) * limit;
+
+  const items = await Assignment.find().sort({ createdAt: -1 }).skip(skip).limit(limit);
+  const total = await Assignment.countDocuments();
+
+  res.status(200).json({ 
+    success: true, 
+    data: items,
+    pagination: {
+      page,
+      limit,
+      total,
+      pages: Math.ceil(total / limit)
+    }
+  });
 }
 
 export async function deleteAssignment(req: Request, res: Response) {

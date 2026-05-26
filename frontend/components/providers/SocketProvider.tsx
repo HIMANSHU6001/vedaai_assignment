@@ -36,7 +36,6 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
     };
 
     socket.on("connect", () => {
-      console.log("Connected to WebSocket server");
       joinProcessingRooms();
     });
 
@@ -91,7 +90,7 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
     );
 
     socket.on("disconnect", () => {
-      console.log("Disconnected from WebSocket server");
+      // Disconnected from WebSocket server
     });
 
     return () => {

@@ -67,18 +67,7 @@ export async function listAssignments(): Promise<Assignment[]> {
   return json.data;
 }
 
-/** GET /api/assignments/:id/status — poll status fallback */
-export async function getAssignmentStatus(
-  assignmentId: string
-): Promise<{ status: string; errorMessage?: string | null }> {
-  const res = await fetch(
-    `${BASE_URL}/api/assignments/${assignmentId}/status`
-  );
-  const json = await handleResponse<
-    ApiResponse<{ assignmentId: string; status: string; jobId?: string; errorMessage?: string | null }>
-  >(res);
-  return { status: json.data.status, errorMessage: json.data.errorMessage };
-}
+
 
 /** DELETE /api/assignments/:id — delete an assignment */
 export async function deleteAssignment(

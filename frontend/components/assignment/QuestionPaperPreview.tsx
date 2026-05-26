@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { ArrowLeft, Loader2, AlertCircle, RefreshCw } from "lucide-react";
 import DownloadExamButton from "@/components/pdf/DownloadExamButton";
-import { useSocket } from "@/lib/useSocket";
+
 import { getResult, triggerGeneration } from "@/lib/api";
 import type { ExamPayload, ExamData } from "@/types/exam";
 import { useAssignmentStore } from "@/store/assignmentStore";
@@ -19,7 +19,8 @@ export default function QuestionPaperPreview({
 }: QuestionPaperPreviewProps) {
   const { assignments } = useAssignmentStore();
   const currentAssignment = assignments.find((a) => a._id === assignmentId);
-  const { status: socketStatus, error: socketError } = useSocket(assignmentId);
+  const socketStatus = currentAssignment?.status || "idle";
+  const socketError = currentAssignment?.errorMessage || null;
   const [examData, setExamData] = useState<ExamData | null>(null);
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [isFetching, setIsFetching] = useState(false);
@@ -163,14 +164,11 @@ export default function QuestionPaperPreview({
                 <p className="text-base lg:text-lg font-bold text-zinc-800">
                   Subject: {examPayload.data.subject || "English"}
                 </p>
-                <p className="text-base lg:text-lg font-bold text-zinc-800 mt-0.5">
-                  Class: 5th
-                </p>
+
               </div>
 
-              {/* Time Allowed & Max Marks Row */}
-              <div className="flex items-center justify-between pb-2 mb-6 text-sm font-bold text-zinc-800 select-none">
-                <span>Time Allowed: 45 minutes</span>
+              {/* Max Marks Row */}
+              <div className="flex items-center justify-end pb-2 mb-6 text-sm font-bold text-zinc-800 select-none">
                 <span>Maximum Marks: {examPayload.data.totalMarks || 20}</span>
               </div>
 
@@ -190,8 +188,10 @@ export default function QuestionPaperPreview({
                   <div className="flex-1 border-b border-zinc-950 h-4 max-w-[200px]"></div>
                 </div>
                 <div className="flex items-end gap-1.5">
-                  <span className="shrink-0">Class: 5th Section:</span>
-                  <div className="flex-1 border-b border-zinc-950 h-4 max-w-[120px]"></div>
+                  <span className="shrink-0">Class:</span>
+                  <div className="flex-1 border-b border-zinc-950 h-4 max-w-[60px]"></div>
+                  <span className="shrink-0 ml-2">Section:</span>
+                  <div className="flex-1 border-b border-zinc-950 h-4 max-w-[60px]"></div>
                 </div>
               </div>
 
