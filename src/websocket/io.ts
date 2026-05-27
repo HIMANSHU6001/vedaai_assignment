@@ -6,7 +6,10 @@ let io: Server | undefined;
 export function initSocketIO(httpServer: HTTPServer): Server {
   io = new Server(httpServer, {
     cors: {
-      origin: (process.env.CORS_ORIGIN ?? 'http://localhost:3000').split(','),
+      origin: (
+        process.env.CORS_ORIGIN ?? 
+        'http://localhost:3000,https://himanshu6001.dev,https://www.himanshu6001.dev'
+      ).split(','),
       methods: ['GET', 'POST'],
     },
     transports: ['websocket', 'polling'],

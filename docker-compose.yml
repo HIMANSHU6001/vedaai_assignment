@@ -6,7 +6,8 @@ services:
       - "4000:4000"
     environment:
       - PORT=4000
-      - NODE_ENV=production
+      - NODE_ENV=development
+      - CORS_ORIGIN=${CORS_ORIGIN}
       - MONGODB_URI=${MONGODB_URI}
       - REDIS_URL=redis://redis:6379
       - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY}
@@ -26,7 +27,7 @@ services:
     container_name: vedaai-worker
     command: [ "node", "dist/worker/worker.js" ]
     environment:
-      - NODE_ENV=production
+      - NODE_ENV=development
       - MONGODB_URI=${MONGODB_URI}
       - REDIS_URL=redis://redis:6379
       - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY}
