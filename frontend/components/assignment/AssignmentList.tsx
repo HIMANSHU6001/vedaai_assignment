@@ -122,7 +122,7 @@ export default function AssignmentList({
   const isEmpty = !isLoading && !fetchError && assignments.length === 0;
 
   return (
-    <div className="flex flex-col flex-1 p-4 lg:p-6 bg-transparent min-h-0 select-none">
+    <div className="relative flex flex-col flex-1 p-4 lg:p-6 bg-transparent min-h-0 select-none">
       {/* Mobile Title Header – hidden when empty */}
       {!isEmpty && (
         <div className="relative flex lg:hidden items-center justify-center mb-6 mt-1 px-1 shrink-0">
@@ -436,13 +436,16 @@ export default function AssignmentList({
         </div>
       </div>
 
-      {/* Floating Action Button for Mobile */}
-      <button
-        onClick={onCreateAssignment}
-        className="lg:hidden fixed bottom-24 right-5 w-14 h-14 bg-white text-orange-500 hover:bg-zinc-50 active:scale-95 rounded-full flex items-center justify-center shadow-[0_4px_20px_rgba(0,0,0,0.15)] border border-zinc-200/50 transition-all z-10 cursor-pointer font-black"
-      >
-        <Plus className="w-7 h-7 text-orange-500" />
-      </button>
+      {/* Floating Action Button for Desktop – filled state only */}
+      {!isEmpty && (
+        <button
+          onClick={onCreateAssignment}
+          className="hidden lg:flex absolute bottom-3 left-1/2 -translate-x-1/2 items-center gap-2 px-6 py-3 rounded-full text-sm text-white bg-zinc-900/90 hover:bg-zinc-800 backdrop-blur-md border border-white/10 shadow-[0_4px_24px_rgba(0,0,0,0.22)] active:scale-95 transition-all z-10 cursor-pointer select-none"
+        >
+          <Plus className="w-4 h-4" />
+          <span>Create Assignment</span>
+        </button>
+      )}
     </div>
   );
 }
