@@ -6,10 +6,21 @@ import { getHealth } from './controllers/health.controller';
 
 export const app = express();
 
-const allowedOrigins = (
-  process.env.CORS_ORIGIN ?? 
-  'http://localhost:3000,https://himanshu6001.dev,https://www.himanshu6001.dev'
-).split(',');
+const allowedOrigins = [
+  'http://localhost:3000',
+  'https://himanshu6001.dev',
+  'https://www.himanshu6001.dev'
+];
+
+if (process.env.CORS_ORIGIN) {
+  process.env.CORS_ORIGIN.split(',').forEach((origin) => {
+    const trimmed = origin.trim();
+    if (trimmed && !allowedOrigins.includes(trimmed)) {
+      allowedOrigins.push(trimmed);
+    }
+  });
+}
+
 app.use(cors({ origin: allowedOrigins }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
